@@ -4,40 +4,44 @@ A [pi](https://pi.dev) extension that provides a deep research agent that autono
 
 Unlike the primitive `search` and `fetch` tools — which return raw results — this agent reasons across multiple sources, follows leads, resolves conflicts, and returns a structured Research Summary. Use when the topic requires depth, cross-referencing, or synthesis beyond a single query.
 
+## Prerequisites
+
+This extension requires [`pi-search-tool`](https://github.com/jandrikus/pi-search-tool) which provides the `search` and `fetch` tools. The extension loads it automatically at runtime, but you need the underlying [`search-headless`](https://github.com/jandrikus/search-headless) installed on your machine.
+
+### Install search-headless
+
+```bash
+# Clone and install
+git clone git@github.com:jandrikus/search-headless.git ~/dev/search-headless
+cd ~/dev/search-headless
+./install.sh
+```
+
+Verify it works:
+
+```bash
+search-web "test query" --limit 3
+fetch-content https://example.com --max-chars 500
+```
+
 ## Installation
 
-### Via `pi install` (recommended)
-
 ```bash
-pi install git:github.com/jandrikus/pi-agentic-search
+pi install npm:pi-agentic-search
 ```
 
-### Manual
-
-```bash
-# Global (available in all projects)
-cp -r pi-agentic-search ~/.pi/agent/extensions/
-
-# Or symlink
-ln -sf /path/to/pi-agentic-search ~/.pi/agent/extensions/pi-agentic-search
-```
-
-### Project-local
-
-```bash
-cp -r pi-agentic-search .pi/extensions/
-```
+This installs the extension and adds it to your settings automatically.
 
 ## Usage
 
-Research is automatically available after installation. Use it for complex topics requiring synthesis:
+The research agent is automatically available after installation. Use it for complex topics requiring synthesis:
 
 ```
-Use agentic_search to research current best practices for rate limiting in distributed APIs
+Research the current best practices for rate limiting in distributed APIs
 ```
 
 ```
-Research the tradeoffs between different database migration strategies
+Compare the approaches of different database migration tools
 ```
 
 Or with parameters directly:
@@ -59,7 +63,7 @@ Or with parameters directly:
 
 ## How It Works
 
-1. Research agent spawns a **background pi process** with `search` and `fetch` tools
+1. Research agent spawns a **background pi process** with `search` and `fetch` tools (from `pi-search-tool`)
 2. A **live progress widget** shows real-time search queries, fetched URLs, and cost
 3. When finished, a **comprehensive Research Summary** is delivered as a follow-up message
 
@@ -69,9 +73,22 @@ The agent uses a cheap model to minimize cost — run it freely for any non-triv
 
 - **Autonomous research** — Searches, fetches, reads full sources, and synthesizes
 - **Live progress widget** — See queries, fetches, token usage, and cost in real time
+- **Agent control panel** — `Ctrl+Shift+2` to stop, cancel, or retry running agents
 - **Auto-retry on transient errors** — Transparently retries on 429, 5xx, and network errors
 - **Customizable system prompt** — Edit via config files that survive updates
-- **Long task support** — Large prompts are automatically written to temp files
+- **Activity timeout** — Detects stuck processes (2 min) and marks as "probably failed"
+
+## Agent Control Panel
+
+Press `Ctrl+Shift+2` to open the control panel. From there you can:
+
+| Key | Action | Effect |
+|-----|--------|--------|
+| `S` | Stop | Pauses agent, keeps widget visible, no LLM feedback |
+| `C` | Cancel | Kills agent, sends "canceled by user" to LLM, removes widget |
+| `R` | Retry | Restarts agent fresh, reuses same widget |
+| `A` | Stop All | Stops all running agents |
+| `Esc` | Close | Closes the control panel |
 
 ## Configuration
 
@@ -79,16 +96,19 @@ The agent uses a cheap model to minimize cost — run it freely for any non-triv
 
 Extension settings live in `settings.json`:
 
-- **Project-local**: `.pi/config/pi-agentic-search/settings.json`
 - **Global**: `~/.pi/config/pi-agentic-search/settings.json`
 
 ```json
 {
-  "model": "claude-haiku-4-5"
+  "model": "xiaomi-token-plan-ams/mimo-v2.5",
+  "keybinding": 2
 }
 ```
 
-Leave `model` empty or remove it to use pi's default model.
+| Setting | Default | Description |
+|---------|---------|-------------|
+| `model` | *(empty)* | Model to use (empty = pi's default) |
+| `keybinding` | `2` | Number key for control panel (`Ctrl+Shift+N`) |
 
 ### System Prompt Customization
 
